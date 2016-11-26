@@ -1,12 +1,16 @@
 package com.hustunique.jianguo.tracking.hook;
 
+import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
+import android.os.IBinder;
 
 import com.hustunique.jianguo.tracking.Config;
 import com.hustunique.jianguo.tracking.track.WatchDog;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 /**
@@ -45,6 +49,19 @@ public class HookHelper {
         }
     }
 
+    public static Activity hookActivity(IBinder token) throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+        Field currentActivityThreadField = activityThreadClass.getDeclaredField("sCurrentActivityThread");
+        currentActivityThreadField.setAccessible(true);
+        Object currentActivityThread = currentActivityThreadField.get(null);
+        Method getActivityMethod = activityThreadClass.getMethod("getActivity", IBinder.class);
+        Activity activity = (Activity) getActivityMethod.invoke(currentActivityThread, token);
+        return activity;
+    }
+
+
+
+
     public static void hookActivityThread(WatchDog watchDog) throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
         Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
         int launchCode = getLaunchCode(activityThreadClass);
@@ -56,7 +73,8 @@ public class HookHelper {
         Handler mH = (Handler) mHField.get(currentActivityThread);
         Field mCallbackField = Handler.class.getDeclaredField("mCallback");
         mCallbackField.setAccessible(true);
-        mCallbackField.set(mH, new HookHandlerCallback(mH, launchCode, watchDog));
+        HookHandlerCallback callback = new HookHandlerCallback(mH, launchCode, watchDog);
+        mCallbackField.set(mH, callback);
     }
 
     private static int getLaunchCode(Class<?> activityThreadClass) throws NoSuchFieldException, IllegalAccessException {
@@ -72,4 +90,6 @@ public class HookHelper {
         }
         return 100;
     }
+
+
 }

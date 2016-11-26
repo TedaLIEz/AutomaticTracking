@@ -2,6 +2,7 @@ package com.hustunique.jianguo.tracking.hook;
 
 import android.content.Intent;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
@@ -11,14 +12,15 @@ import java.lang.reflect.Field;
 
 /**
  * Created by JianGuo on 11/26/16.
+ * {@link android.os.Handler.Callback} used in hooking mH in {@link ActivityThread}
  */
 
 public class HookHandlerCallback implements Handler.Callback {
     private static final String TAG = "HookHandlerCallback";
-    Handler mBase;
-    int launchCode = 100;
+    private Handler mBase;
+    private int launchCode = 100;
     private WatchDog watchDog;
-    public HookHandlerCallback(Handler base, int launchCode, WatchDog watchDog) {
+    HookHandlerCallback(Handler base, int launchCode, WatchDog watchDog) {
         mBase = base;
         this.launchCode = launchCode;
         this.watchDog = watchDog;
@@ -27,30 +29,33 @@ public class HookHandlerCallback implements Handler.Callback {
 
     @Override
     public boolean handleMessage(Message msg) {
+        String actClz = null;
         if (msg.what == launchCode) {
-            handleLaunchActivity(msg);
+            actClz = handleLaunchActivity(msg);
         }
         mBase.handleMessage(msg);
+        watchDog.watchOverViewTree(actClz);
         return true;
     }
 
-    private void handleLaunchActivity(Message msg) {
+    private String handleLaunchActivity(Message msg) {
         Object obj = msg.obj;
-
         try {
-            Field intent = obj.getClass().getDeclaredField("intent");
-            intent.setAccessible(true);
-            Intent raw = (Intent) intent.get(obj);
-            track(raw);
+            Field tokenField = obj.getClass().getDeclaredField("token");
+            Field intentField = obj.getClass().getDeclaredField("intent");
+            intentField.setAccessible(true);
+            tokenField.setAccessible(true);
+            Intent intent = (Intent) intentField.get(obj);
+            IBinder token = (IBinder) tokenField.get(obj);
+            watchDog.addToTokenList(intent.getComponent().getClassName(), token);
+            return intent.getComponent().getClassName();
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            Log.wtf(TAG, e);
+            return null;
         }
+
     }
 
-    private void track(Intent raw) {
-        watchDog.watchOverViewTree(raw.getComponent().getClassName());
-        Log.d(TAG, "start Activity " + raw.getComponent().getClassName());
-    }
 
 
 }
