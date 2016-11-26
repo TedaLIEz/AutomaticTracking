@@ -12,6 +12,10 @@ import com.hustunique.jianguo.tracking.hook.HookHelper;
 
 public class TrackingManager {
     public static void track(Application application, @NonNull Config config) {
-        new WatchDog(config).watchOver(application);
+        try {
+            HookHelper.hookActivityThread();
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 }

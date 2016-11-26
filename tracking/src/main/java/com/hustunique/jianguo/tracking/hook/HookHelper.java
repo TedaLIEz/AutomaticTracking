@@ -1,7 +1,7 @@
 package com.hustunique.jianguo.tracking.hook;
 
-import android.app.Application;
 import android.os.Build;
+import android.os.Handler;
 
 import com.hustunique.jianguo.tracking.Config;
 
@@ -29,21 +29,46 @@ public class HookHelper {
                 Object rawIActivityManager = mInstanceField.get(gDefault);
 
                 Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class<?>[] { iActivityManagerInterface }, new IActivityManagerHandler(rawIActivityManager, config));
+                        new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(rawIActivityManager, config));
                 mInstanceField.set(gDefault, proxy);
             } else {
                 Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class<?>[] { iActivityManagerInterface }, new IActivityManagerHandler(gDefault, config));
+                        new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(gDefault, config));
                 gDefaultField.set(gDefault, proxy);
             }
             // ActivityManagerNative 的gDefault对象里面原始的 IActivityManager对象
 
 
-
-
-
         } catch (IllegalAccessException | NoSuchFieldException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void hookActivityThread() throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
+        Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+        int launchCode = getLaunchCode(activityThreadClass);
+        Field currentActivityThreadField = activityThreadClass.getDeclaredField("sCurrentActivityThread");
+        currentActivityThreadField.setAccessible(true);
+        Object currentActivityThread = currentActivityThreadField.get(null);
+        Field mHField = activityThreadClass.getDeclaredField("mH");
+        mHField.setAccessible(true);
+        Handler mH = (Handler) mHField.get(currentActivityThread);
+        Field mCallbackField = Handler.class.getDeclaredField("mCallback");
+        mCallbackField.setAccessible(true);
+        mCallbackField.set(mH, new HookHandlerCallback(mH, launchCode));
+    }
+
+    private static int getLaunchCode(Class<?> activityThreadClass) throws NoSuchFieldException, IllegalAccessException {
+        Class<?>[] clz = activityThreadClass.getDeclaredClasses();
+        if (clz.length == 0) {
+            return -1;
+        }
+        for (Class innerClass : clz) {
+            if (innerClass.getSimpleName().equals("H")) {
+                Field launchField = innerClass.getField("LAUNCH_ACTIVITY");
+                return launchField.getInt(null);
+            }
+        }
+        return 100;
     }
 }

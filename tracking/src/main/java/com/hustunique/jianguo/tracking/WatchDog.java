@@ -20,13 +20,10 @@ public class WatchDog {
     }
 
     public void watchOver(Application application) {
-        Intent intent = application.getPackageManager().getLaunchIntentForPackage(application.getPackageName());
-        if (intent == null) {
-            throw new IllegalStateException("No default launcher activity found in application");
+        try {
+            HookHelper.hookActivityThread();
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            Log.wtf(TAG, e);
         }
-        String launcherClz = intent.getComponent().getClassName();
-        // TODO: Add observable pattern to launcherActivity
-        Log.d(TAG, "Starting watching " + launcherClz);
-        HookHelper.hookActivityManager(config);
     }
 }
