@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.hustunique.jianguo.tracking.track.WatchDog;
+
 import java.lang.reflect.Field;
 
 /**
@@ -12,13 +14,14 @@ import java.lang.reflect.Field;
  */
 
 public class HookHandlerCallback implements Handler.Callback {
-    private static final String TAG = "HookHandler";
+    private static final String TAG = "HookHandlerCallback";
     Handler mBase;
     int launchCode = 100;
-
-    public HookHandlerCallback(Handler base, int launchCode) {
+    private WatchDog watchDog;
+    public HookHandlerCallback(Handler base, int launchCode, WatchDog watchDog) {
         mBase = base;
         this.launchCode = launchCode;
+        this.watchDog = watchDog;
     }
 
 
@@ -45,6 +48,7 @@ public class HookHandlerCallback implements Handler.Callback {
     }
 
     private void track(Intent raw) {
+        watchDog.watchOverViewTree(raw.getComponent().getClassName());
         Log.d(TAG, "start Activity " + raw.getComponent().getClassName());
     }
 

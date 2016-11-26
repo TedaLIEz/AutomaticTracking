@@ -4,6 +4,7 @@ import android.os.Build;
 import android.os.Handler;
 
 import com.hustunique.jianguo.tracking.Config;
+import com.hustunique.jianguo.tracking.track.WatchDog;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -29,11 +30,11 @@ public class HookHelper {
                 Object rawIActivityManager = mInstanceField.get(gDefault);
 
                 Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(rawIActivityManager, config));
+                        new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(rawIActivityManager));
                 mInstanceField.set(gDefault, proxy);
             } else {
                 Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(gDefault, config));
+                        new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(gDefault));
                 gDefaultField.set(gDefault, proxy);
             }
             // ActivityManagerNative 的gDefault对象里面原始的 IActivityManager对象
@@ -44,7 +45,7 @@ public class HookHelper {
         }
     }
 
-    public static void hookActivityThread() throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
+    public static void hookActivityThread(WatchDog watchDog) throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
         Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
         int launchCode = getLaunchCode(activityThreadClass);
         Field currentActivityThreadField = activityThreadClass.getDeclaredField("sCurrentActivityThread");
@@ -55,7 +56,7 @@ public class HookHelper {
         Handler mH = (Handler) mHField.get(currentActivityThread);
         Field mCallbackField = Handler.class.getDeclaredField("mCallback");
         mCallbackField.setAccessible(true);
-        mCallbackField.set(mH, new HookHandlerCallback(mH, launchCode));
+        mCallbackField.set(mH, new HookHandlerCallback(mH, launchCode, watchDog));
     }
 
     private static int getLaunchCode(Class<?> activityThreadClass) throws NoSuchFieldException, IllegalAccessException {

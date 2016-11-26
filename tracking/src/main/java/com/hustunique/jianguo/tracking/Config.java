@@ -1,7 +1,8 @@
 package com.hustunique.jianguo.tracking;
 
+import android.support.v4.util.Pair;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,46 +12,74 @@ import java.util.List;
  */
 
 public class Config {
-    private List<Path> trackList;
+    List<Pair<Path, Callback>> config;
     private static final String TAG = "TrackingConfig";
 
     private Config() {
     }
 
-    private Config(List<Path> trackList) {
-        this.trackList = trackList;
+    private Config(List<Pair<Path, Callback>> config) {
+        this.config = config;
     }
 
-    public List<Path> getTrackList() {
-        return trackList;
+
+
+    public boolean getActivityClz(String clz) {
+        for (Pair<Path, Callback> pair : config) {
+            if (pair.first.actClz.equals(clz)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String getPath(String clz) {
+        for (Pair<Path, Callback> pair : config) {
+            if (pair.first.actClz.equals(clz)) {
+                return pair.first.toString();
+            }
+        }
+        return null;
     }
 
     public static class Builder {
-        private List<Path> trackList;
+
+        List<Pair<Path, Callback>> config;
 
         public Builder() {
-            trackList = new ArrayList<>();
+            config = new ArrayList<>();
         }
 
-        public Builder addPath(String decorName, String... args) {
+        public Builder addPath(Callback callback, String decorName, List<String> viewLst) {
             Path path = new Path();
-            path.decorClz = decorName;
-            Collections.addAll(path.pathIdList, args);
-            trackList.add(path);
+            path.actClz = decorName;
+            path.pathIdList = viewLst;
+            config.add(Pair.create(path, callback));
             return this;
         }
 
         public Config build() {
-            return new Config(trackList);
+            return new Config(config);
         }
     }
 
-    public static class Path {
-        public String decorClz;
-        public List<String> pathIdList;
+    public interface Callback {
+        void onEventTracked();
+    }
 
+    public static class Path {
+        public String actClz;
+        public List<String> pathIdList;
         Path() {
             pathIdList = new LinkedList<>();
+        }
+
+        @Override
+        public String toString() {
+            return "Path{" +
+                    "actClz='" + actClz + '\'' +
+                    ", pathIdList=" + pathIdList +
+                    '}';
         }
     }
 }
