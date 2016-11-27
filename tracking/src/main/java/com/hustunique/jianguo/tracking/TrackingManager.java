@@ -13,7 +13,7 @@ import com.hustunique.jianguo.tracking.track.WatchDog;
 
 public class TrackingManager {
     public static void track(Application application, @NonNull Config config) {
-        WatchDog watchDog = WatchDog.getInstance(config);
+        WatchDog watchDog = new WatchDog(application, config);
         try {
             HookHelper.hookActivityThread(watchDog);
         } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {

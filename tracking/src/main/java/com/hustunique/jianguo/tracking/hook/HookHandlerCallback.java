@@ -19,26 +19,34 @@ public class HookHandlerCallback implements Handler.Callback {
     private static final String TAG = "HookHandlerCallback";
     private Handler mBase;
     private int launchCode = 100;
+    private int resumeCode = 107;
     private WatchDog watchDog;
-    HookHandlerCallback(Handler base, int launchCode, WatchDog watchDog) {
+    HookHandlerCallback(Handler base, int launchCode, int resumeCode, WatchDog watchDog) {
         mBase = base;
         this.launchCode = launchCode;
         this.watchDog = watchDog;
+        this.resumeCode = resumeCode;
     }
 
 
     @Override
     public boolean handleMessage(Message msg) {
-        String actClz = null;
         if (msg.what == launchCode) {
-            actClz = handleLaunchActivity(msg);
+            handleLaunchActivity(msg);
+        } else if (msg.what == resumeCode) {
+            handleResumeActivity(msg);
         }
         mBase.handleMessage(msg);
-        watchDog.watchOverViewTree(actClz);
+        watchDog.watchOver();
         return true;
     }
 
-    private String handleLaunchActivity(Message msg) {
+    private void handleResumeActivity(Message msg) {
+        IBinder token = (IBinder) msg.obj;
+        watchDog.pushToken(token);
+    }
+
+    private void handleLaunchActivity(Message msg) {
         Object obj = msg.obj;
         try {
             Field tokenField = obj.getClass().getDeclaredField("token");
@@ -48,10 +56,9 @@ public class HookHandlerCallback implements Handler.Callback {
             Intent intent = (Intent) intentField.get(obj);
             IBinder token = (IBinder) tokenField.get(obj);
             watchDog.addToTokenList(intent.getComponent().getClassName(), token);
-            return intent.getComponent().getClassName();
+            watchDog.pushToken(token);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             Log.wtf(TAG, e);
-            return null;
         }
 
     }

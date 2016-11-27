@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.view.View;
 
 import com.hustunique.jianguo.tracking.Config;
 import com.hustunique.jianguo.tracking.track.WatchDog;
@@ -59,12 +60,10 @@ public class HookHelper {
         return activity;
     }
 
-
-
-
     public static void hookActivityThread(WatchDog watchDog) throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
         Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
-        int launchCode = getLaunchCode(activityThreadClass);
+        int[] code = new int[2];
+        getCode(activityThreadClass, code);
         Field currentActivityThreadField = activityThreadClass.getDeclaredField("sCurrentActivityThread");
         currentActivityThreadField.setAccessible(true);
         Object currentActivityThread = currentActivityThreadField.get(null);
@@ -73,23 +72,47 @@ public class HookHelper {
         Handler mH = (Handler) mHField.get(currentActivityThread);
         Field mCallbackField = Handler.class.getDeclaredField("mCallback");
         mCallbackField.setAccessible(true);
-        HookHandlerCallback callback = new HookHandlerCallback(mH, launchCode, watchDog);
+        HookHandlerCallback callback = new HookHandlerCallback(mH, code[0], code[1], watchDog);
         mCallbackField.set(mH, callback);
     }
 
-    private static int getLaunchCode(Class<?> activityThreadClass) throws NoSuchFieldException, IllegalAccessException {
+    private static boolean getCode(Class<?> activityThreadClass, int[] code) throws NoSuchFieldException, IllegalAccessException {
         Class<?>[] clz = activityThreadClass.getDeclaredClasses();
         if (clz.length == 0) {
-            return -1;
+            return false;
         }
         for (Class innerClass : clz) {
             if (innerClass.getSimpleName().equals("H")) {
                 Field launchField = innerClass.getField("LAUNCH_ACTIVITY");
-                return launchField.getInt(null);
+                code[0] = launchField.getInt(null);
+                Field resumeField = innerClass.getField("RESUME_ACTIVITY");
+                code[1] = resumeField.getInt(null);
+                return true;
             }
         }
-        return 100;
+        return false;
     }
 
 
+    public static void hookListener(View view) throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException,
+            NoSuchFieldException, ClassNotFoundException {
+        if (view.hasOnClickListeners()) {
+            Method method = View.class.getDeclaredMethod("getListenerInfo", (Class[]) null);
+            if (null != method) {
+                method.setAccessible(true);
+                Object listenerInfo = method.invoke(view, (Object[]) null);
+                if (null != listenerInfo) {
+                    Class<?> listenerInfoClz = listenerInfo.getClass();
+                    Field listenerField = listenerInfoClz.getDeclaredField("mOnClickListener");
+                    listenerField.setAccessible(true);
+                    View.OnClickListener listener = (View.OnClickListener) listenerField.get(listenerInfo);
+                    Class<?> onClickListenerClz = Class.forName("android.view.View$OnClickListener");
+                    Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                            new Class[]{onClickListenerClz}, new IClickHandler(listener));
+                    listenerField.set(listenerInfo, proxy);
+                }
+            }
+        }
+    }
 }

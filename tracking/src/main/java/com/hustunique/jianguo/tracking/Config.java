@@ -42,6 +42,16 @@ public class Config {
         return null;
     }
 
+    public List<List<String>> getPathList(String name) {
+        List<List<String>> rst = new ArrayList<>();
+        for (Pair<Path, Callback> pair : config) {
+            if (pair.first.actClz.equals(name)) {
+                rst.add(pair.first.pathIdList);
+            }
+        }
+        return rst;
+    }
+
     public static class Builder {
 
         List<Pair<Path, Callback>> config;
