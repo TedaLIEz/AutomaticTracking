@@ -1,6 +1,9 @@
 package com.hustunique.jianguo.tracking.hook;
 
 import android.util.Log;
+import android.view.View;
+
+import com.hustunique.jianguo.tracking.Config;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -14,9 +17,10 @@ import java.util.Arrays;
 public class IClickHandler implements InvocationHandler {
     private static final String TAG = "IClickHandler";
     Object mBase;
-
-    public IClickHandler(Object base) {
+    Config.Callback callback;
+    public IClickHandler(Object base, Config.Callback callback) {
         mBase = base;
+        this.callback = callback;
     }
 
     @Override
@@ -24,6 +28,8 @@ public class IClickHandler implements InvocationHandler {
         if ("onClick".equals(method.getName())) {
             //TODO: add callback in this handler
             Log.i(TAG, "BIG BROTHER IS WATCHING OVER YOU");
+            View v = (View) args[0];
+            callback.onEventTracked(v);
         }
         return method.invoke(mBase, args);
     }

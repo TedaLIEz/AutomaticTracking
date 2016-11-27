@@ -25,7 +25,7 @@ import java.util.Stack;
 public class WatchDog {
     private static final String TAG = "WatchDog";
     private Config config;
-    private ArrayMap<String, IBinder> mBinders;
+    private ArrayMap<IBinder, String> mBinders;
     private Set<IBinder> mTokens;
     private Application application;
     private IBinder currToken = null;
@@ -49,7 +49,6 @@ public class WatchDog {
                 Log.wtf(TAG, e);
             }
         }
-        //TODO: use dynamic proxy to replace original OnClickListener
     }
 
     private void watchViewTree(Activity activity) {
@@ -78,12 +77,12 @@ public class WatchDog {
             if (pathList.size() == depth) {
                 Log.d(TAG, "find target view " + view.toString());
                 try {
-                    HookHelper.hookListener(view);
+                    // TODO: how to find the corresponding callback
+                    HookHelper.hookListener(view, config.findCallback(mBinders.get(currToken), pathList));
                 } catch (NoSuchMethodException | InvocationTargetException
                         | IllegalAccessException | ClassNotFoundException | NoSuchFieldException e) {
                     Log.wtf(TAG, e);
                 }
-                // TODO: hook the target onclickListener.
                 return;
             }
             if (view instanceof ViewGroup) {
@@ -113,7 +112,7 @@ public class WatchDog {
     }
 
     public void addToTokenList(String clz, IBinder token) {
-        mBinders.put(clz, token);
+        mBinders.put(token, clz);
     }
 
 
