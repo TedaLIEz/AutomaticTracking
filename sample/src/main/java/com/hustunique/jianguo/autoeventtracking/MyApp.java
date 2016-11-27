@@ -48,6 +48,13 @@ public class MyApp extends Application {
                              }
                          }, "com.hustunique.jianguo.autoeventtracking.MainActivity",
                         "activity_main", "btn_startAct")
+                .addPath(new Config.Callback() {
+                    @Override
+                    public void onEventTracked(View v) {
+                        Log.d(TAG, "linearLayout3 in MainActivity2, BIG BROTHER IS WATCHING OVER YOU");
+                    }
+                }, "com.hustunique.jianguo.autoeventtracking.Main2Activity",
+                        "activity_main2", "linearLayout3")
                 .build();
         TrackingManager.track(this, config);
     }

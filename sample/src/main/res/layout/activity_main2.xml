@@ -25,4 +25,13 @@
         android:text="I am tracked too!"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="I am not tracked, but my layout is being tracked!"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 </LinearLayout>

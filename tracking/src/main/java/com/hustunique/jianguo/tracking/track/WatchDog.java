@@ -77,7 +77,6 @@ public class WatchDog {
             if (pathList.size() == depth) {
                 Log.d(TAG, "find target view " + view.toString());
                 try {
-                    // TODO: how to find the corresponding callback
                     HookHelper.hookListener(view, config.findCallback(mBinders.get(currToken), pathList));
                 } catch (NoSuchMethodException | InvocationTargetException
                         | IllegalAccessException | ClassNotFoundException | NoSuchFieldException e) {

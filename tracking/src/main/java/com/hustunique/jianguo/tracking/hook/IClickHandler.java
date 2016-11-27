@@ -26,8 +26,6 @@ public class IClickHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("onClick".equals(method.getName())) {
-            //TODO: add callback in this handler
-            Log.i(TAG, "BIG BROTHER IS WATCHING OVER YOU");
             View v = (View) args[0];
             callback.onEventTracked(v);
         }

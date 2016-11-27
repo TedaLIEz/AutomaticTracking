@@ -8,9 +8,10 @@ import java.util.Arrays;
 
 /**
  * Created by JianGuo on 11/25/16.
- * InvocationHandler for {@link ActivityManagerNative}
+ * InvocationHandler for {@link ActivityManagerNative},
+ * deprecated, use {@link HookHandlerCallback} instead
  */
-//TODO: filter to get the entrance function when activity starts.
+@Deprecated
 class IActivityManagerHandler implements InvocationHandler {
     private static final String TAG = "IActivityManagerHandler";
     private Object mBase;
