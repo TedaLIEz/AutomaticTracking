@@ -1,13 +1,11 @@
 package com.hustunique.jianguo.tracking.hook;
 
-import android.util.Log;
 import android.view.View;
 
 import com.hustunique.jianguo.tracking.Config;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 /**
  * Created by JianGuo on 11/27/16.

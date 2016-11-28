@@ -19,8 +19,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         button = (Button) findViewById(R.id.btn_track);
         button1 = (Button) findViewById(R.id.btn_track2);
         Button button2 = (Button) findViewById(R.id.btn_startAct);
+        Button mergeBtn = (Button) findViewById(R.id.btn_merge);
         button.setOnClickListener(this);
         button1.setOnClickListener(this);
+        mergeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
     }
 
     public void startMain2(View v) {

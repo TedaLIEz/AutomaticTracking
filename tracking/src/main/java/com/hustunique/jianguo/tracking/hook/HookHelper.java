@@ -15,7 +15,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by JianGuo on 11/25/16.
@@ -126,10 +128,12 @@ public class HookHelper {
         return false;
     }
 
+
+    private static Set<View> hookViewSet = new HashSet<>();
     public static void hookListener(View view, Config.Callback callback)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException,
             NoSuchFieldException, ClassNotFoundException {
-        if (view.hasOnClickListeners()) {
+        if (view.hasOnClickListeners() && !hookViewSet.contains(view)) {
             Method method = methodMap.get("getListenerInfo");
             if (null != method) {
                 method.setAccessible(true);
@@ -143,6 +147,7 @@ public class HookHelper {
                     Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
                             new Class[]{onClickListenerClz}, new IClickHandler(listener, callback));
                     listenerField.set(listenerInfo, proxy);
+                    hookViewSet.add(view);
                 }
             }
         }

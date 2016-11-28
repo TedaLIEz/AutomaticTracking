@@ -1,0 +1,19 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="horizontal"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context="com.hustunique.jianguo.autoeventtracking.Blank2Fragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <Button
+        android:text="I am tracked"
+        android:id="@+id/btn_frag2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="this is blank2Fragment"/>
+
+</LinearLayout>

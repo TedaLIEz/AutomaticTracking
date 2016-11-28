@@ -1,19 +1,10 @@
 package com.hustunique.jianguo.tracking;
 
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.util.ArrayMap;
-import android.support.v4.util.Pair;
-import android.telecom.Call;
 import android.view.View;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -23,11 +14,11 @@ import java.util.List;
  * [
  *  {
  *      "activity" : "com.hustunique.jianguo.sample.MainActivity",
- *      "ids" : ["activity_main", "btn_track"]
+ *      "ids" : "btn_track"
  *  },
  *  {
  *      "activity" : "com.hustunique.jianguo.sample.MainActivity",
- *      "ids" : ["activity_main", "btn_track2"]
+ *      "ids" : "btn_track2"
  *  }
  * ]
  * </p>
@@ -63,24 +54,26 @@ public class Config {
         return null;
     }
 
-    public List<List<String>> getPathList(String name) {
-        List<List<String>> rst = new ArrayList<>();
+    public List<String> getPathList(String name) {
+        List<String> rst = new ArrayList<>();
         for (Path path : config.keySet()) {
             if (path.actClz.equals(name)) {
-                rst.add(path.pathIdList);
+                rst.add(path.pathId);
             }
         }
         return rst;
     }
 
-    public Callback findCallback(String clz, List<String> pathList) {
+    public Callback findCallback(String clz, String id) {
         for (Path path : config.keySet()) {
-            if (path.actClz.equals(clz) && path.pathIdList.equals(pathList)) {
+            if (path.actClz.equals(clz) && path.pathId.equals(id)) {
                 return config.get(path);
             }
         }
         return null;
     }
+
+
 
     public static class Builder {
         ArrayMap<Path, Callback> config;
@@ -92,10 +85,8 @@ public class Config {
 
 
         // TODO: 11/27/16 How to set callback when parsing json format
-        public Builder addPath(Callback callback, String decorName, String... ids) {
-            Path path = new Path();
-            path.actClz = decorName;
-            Collections.addAll(path.pathIdList, ids);
+        public Builder addPath(Callback callback, String actClz, String id) {
+            Path path = new Path(actClz, id);
             config.put(path, callback == null ? mDefaultCallback : callback);
             return this;
         }
@@ -114,19 +105,19 @@ public class Config {
         void onEventTracked(View v);
     }
 
-    public static class Path {
-        public String actClz;
-        public List<String> pathIdList;
-
-        Path() {
-            pathIdList = new LinkedList<>();
+    private static class Path {
+        final String actClz;
+        final String pathId;
+        Path(String actClz, String pathId) {
+            this.actClz = actClz;
+            this.pathId = pathId;
         }
 
         @Override
         public String toString() {
             return "Path{" +
                     "actClz='" + actClz + '\'' +
-                    ", pathIdList=" + pathIdList +
+                    ", pathId=" + pathId +
                     '}';
         }
     }
