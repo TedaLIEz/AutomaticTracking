@@ -1,0 +1,64 @@
+language: android
+
+jdk:
+  - oraclejdk8
+
+notifications:
+  email:
+    - aliezted@gmail.com
+env:
+  global:
+    - ADB_INSTALL_TIMEOUT=10
+
+
+sudo: required
+
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-25.0.2
+    - android-23
+    - android-24
+    - android-25
+    - extra-android-support
+    - extra-android-m2repository
+    # Specify at least one system image,
+    # if you need to run emulator(s) during your tests
+    - sys-img-armeabi-v7a-android-21
+    - sys-img-armeabi-v7a-android-23
+    - sys-img-armeabi-v7a-android-25
+
+licenses:
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-preview-license-52d11cd2'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+
+before_install:
+    - sudo apt-get update
+
+
+addons:
+  apt_packages:
+    - pandoc
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
+
+script:
+     - ./building.sh
+
+after_script:
+    - pandoc $TRAVIS_BUILD_DIR/tracking/build/reports/checkstyle/checkstyle.html -t plain | sed -n '/^stylechecking/,/default-package/p'
+    - pandoc $TRAVIS_BUILD_DIR/tracking/build/outputs/lint-results-debug.html -t plain | sed -n '/^lint checking/,/default-package/p'
+    - pandoc $TRAVIS_BUILD_DIR/tracking/build/reports/tests/debug/index.html -t plain | sed -n '/^debug testing/,/default-package/p'
+    - pandoc $TRAVIS_BUILD_DIR/tracking/build/reports/tests/release/index.html -t plain | sed -n '/^release testing/,/default-package/p'
