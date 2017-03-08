@@ -17,10 +17,8 @@
 
 package com.hustunique.jianguo.tracking;
 
-import android.support.annotation.NonNull;
 import android.support.v4.util.ArrayMap;
 import android.view.View;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,19 +30,25 @@ import java.util.List;
 //TODO: refactor config builder, build config from json format
 public class Config {
 
-  ArrayMap<Path, Callback> config;
+  private ArrayMap<TrackingPath, Callback> config;
   private static final String TAG = "TrackingConfig";
 
   private Config() {
   }
 
-  private Config(ArrayMap<Path, Callback> config) {
+  private Config(ArrayMap<TrackingPath, Callback> config) {
     this.config = config;
   }
 
 
-  public boolean getActivityClz(String clz) {
-    for (Path path : config.keySet()) {
+  /**
+   * Return <tt>true</tt> activity is tracked in config
+   *
+   * @param clz the activity full class name
+   * @return <tt>true</tt> if tracked, <tt>false</tt> otherwise
+   */
+  public boolean activityInTrack(String clz) {
+    for (TrackingPath path : config.keySet()) {
       if (path.actClz.equals(clz)) {
         return true;
       }
@@ -52,8 +56,9 @@ public class Config {
     return false;
   }
 
+  @Deprecated
   public String getPath(String clz) {
-    for (Path path : config.keySet()) {
+    for (TrackingPath path : config.keySet()) {
       if (path.actClz.equals(clz)) {
         return path.toString();
       }
@@ -61,10 +66,10 @@ public class Config {
     return null;
   }
 
-  public List<String> getPathList(String name) {
+  public List<String> getPathList(String clz) {
     List<String> rst = new ArrayList<>();
-    for (Path path : config.keySet()) {
-      if (path.actClz.equals(name)) {
+    for (TrackingPath path : config.keySet()) {
+      if (path.actClz.equals(clz)) {
         rst.add(path.pathId);
       }
     }
@@ -72,7 +77,7 @@ public class Config {
   }
 
   public Callback findCallback(String clz, String id) {
-    for (Path path : config.keySet()) {
+    for (TrackingPath path : config.keySet()) {
       if (path.actClz.equals(clz) && path.pathId.equals(id)) {
         return config.get(path);
       }
@@ -83,23 +88,15 @@ public class Config {
 
   public static class Builder {
 
-    ArrayMap<Path, Callback> config;
-    Callback mDefaultCallback;
+    ArrayMap<TrackingPath, Callback> config;
 
     public Builder() {
       config = new ArrayMap<>();
     }
 
 
-    // TODO: 11/27/16 How to set callback when parsing json format
-    public Builder addPath(Callback callback, String actClz, String id) {
-      Path path = new Path(actClz, id);
-      config.put(path, callback == null ? mDefaultCallback : callback);
-      return this;
-    }
-
-    public Builder setDefaultCallback(@NonNull Callback callback) {
-      mDefaultCallback = callback;
+    public Builder addPath(Callback callback, TrackingPath path) {
+      config.put(path, callback);
       return this;
     }
 
@@ -113,22 +110,5 @@ public class Config {
     void onEventTracked(View v);
   }
 
-  private static class Path {
 
-    final String actClz;
-    final String pathId;
-
-    Path(String actClz, String pathId) {
-      this.actClz = actClz;
-      this.pathId = pathId;
-    }
-
-    @Override
-    public String toString() {
-      return "Path{" + "actClz='"
-          + actClz + '\''
-          + ", pathId=" + pathId
-          + '}';
-    }
-  }
 }

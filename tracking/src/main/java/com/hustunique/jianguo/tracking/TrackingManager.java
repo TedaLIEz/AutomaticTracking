@@ -24,11 +24,17 @@ import com.hustunique.jianguo.tracking.hook.HookHelper;
 import com.hustunique.jianguo.tracking.track.WatchDog;
 
 /**
- * Created by JianGuo on 11/24/16. Manager for tracking click event.
+ * Created by JianGuo on 11/24/16.
+ * Manager for tracking click event.
  */
 
 public class TrackingManager {
 
+  /**
+   * Track application
+   * @param application the application, init in {@link Application#onCreate()}
+   * @param config the config, see {@link Config}
+   */
   public static void track(Application application, @NonNull Config config) {
     WatchDog watchDog = new WatchDog(application, config);
     try {

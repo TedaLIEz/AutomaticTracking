@@ -28,13 +28,13 @@ import java.lang.reflect.Method;
  * Created by JianGuo on 11/27/16. Dynamic Proxy for {@link android.view.View.OnClickListener}
  */
 
-public class IClickHandler implements InvocationHandler {
+class IClickHandler implements InvocationHandler {
 
   private static final String TAG = "IClickHandler";
   Object mBase;
   Config.Callback callback;
 
-  public IClickHandler(Object base, Config.Callback callback) {
+  IClickHandler(Object base, Config.Callback callback) {
     mBase = base;
     this.callback = callback;
   }

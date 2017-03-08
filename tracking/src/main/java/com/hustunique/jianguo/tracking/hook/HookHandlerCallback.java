@@ -32,7 +32,7 @@ import java.lang.reflect.Field;
  * ActivityThread}
  */
 
-public class HookHandlerCallback implements Handler.Callback {
+class HookHandlerCallback implements Handler.Callback {
 
   private static final String TAG = "HookHandlerCallback";
   private Handler mBase;
@@ -62,7 +62,7 @@ public class HookHandlerCallback implements Handler.Callback {
 
   private void handleResumeActivity(Message msg) {
     IBinder token = (IBinder) msg.obj;
-    watchDog.pushToken(token);
+    watchDog.setToken(token);
   }
 
   private void handleLaunchActivity(Message msg) {
@@ -74,8 +74,9 @@ public class HookHandlerCallback implements Handler.Callback {
       tokenField.setAccessible(true);
       Intent intent = (Intent) intentField.get(obj);
       IBinder token = (IBinder) tokenField.get(obj);
+      // component name is not super class of Activity
       watchDog.addToTokenList(intent.getComponent().getClassName(), token);
-      watchDog.pushToken(token);
+      watchDog.setToken(token);
     } catch (NoSuchFieldException | IllegalAccessException e) {
       Log.wtf(TAG, e);
     }

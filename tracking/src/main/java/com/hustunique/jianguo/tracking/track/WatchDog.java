@@ -35,7 +35,6 @@ import java.util.Set;
 /**
  * Created by JianGuo on 11/25/16. WatchDog
  */
-// TODO: 11/28/16 Watch fragments in the current activity
 public class WatchDog {
 
   private static final String TAG = "WatchDog";
@@ -44,7 +43,6 @@ public class WatchDog {
   private Set<IBinder> mTokens;
   private Application application;
   private IBinder currToken = null;
-  private IBinder prevToken = null;
 
   public WatchDog(Application application, Config config) {
     this.config = config;
@@ -53,6 +51,9 @@ public class WatchDog {
     mTokens = new HashSet<>();
   }
 
+  /**
+   * Start tracking
+   */
   public void watchOver() {
 
     if (!mTokens.contains(currToken)) {
@@ -94,12 +95,12 @@ public class WatchDog {
     for (int i = 0; i < childCount; i++) {
       View childView = rootView.getChildAt(i);
       for (String id : pathList) {
-        rTraverse(childView, id, clz);
+        rTraverse(childView, id);
       }
     }
   }
 
-  private void rTraverse(View view, String id, String clz) {
+  private void rTraverse(View view, String id) {
     if (view == null) {
       return;
     }
@@ -116,12 +117,13 @@ public class WatchDog {
       int childCount = viewRoot.getChildCount();
       for (int i = 0; i < childCount; i++) {
         View childView = viewRoot.getChildAt(i);
-        rTraverse(childView, id, clz);
+        rTraverse(childView, id);
       }
     }
   }
 
   private int toId(String id) {
+
     return application.getResources().getIdentifier(id, "id", application.getPackageName());
   }
 
@@ -130,17 +132,21 @@ public class WatchDog {
   }
 
 
-  private boolean isWatched(String decorClz) {
-    return config.getActivityClz(decorClz);
+  private boolean isWatched(String clz) {
+    return config.activityInTrack(clz);
   }
 
-  public void addToTokenList(String clz, IBinder token) {
-    mBinders.put(token, clz);
+  /**
+   * add binder token to list
+   * @param compClzName the componentName
+   * @param token the Binder which used as token in system
+   */
+  public void addToTokenList(String compClzName, IBinder token) {
+    mBinders.put(token, compClzName);
   }
 
 
-  public void pushToken(IBinder token) {
-    prevToken = currToken;
+  public void setToken(IBinder token) {
     currToken = token;
   }
 }
