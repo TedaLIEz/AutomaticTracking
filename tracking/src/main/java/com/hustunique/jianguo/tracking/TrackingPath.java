@@ -24,11 +24,11 @@ import android.view.View;
  * Created by JianGuo on 3/1/17.
  * POJO used in {@link Config}
  */
-// we don't use class directly as string is more convenient to pass over
+// TODO: 3/14/17 Reflection here is NG
 public class TrackingPath {
-  final String actClz;
+  final Class<? extends Activity> actClz;
   final String pathId;
-  final String viewClz;
+  final Class<? extends View> viewClz;
 
   /**
    * Construct the tracking path
@@ -37,7 +37,9 @@ public class TrackingPath {
    * @param pathId the view's id
    */
   public TrackingPath(Class<? extends Activity> clz, Class<? extends View> viewClz, String pathId) {
-    this(clz.getName(), viewClz.getName(), pathId);
+    actClz = clz;
+    this.viewClz = viewClz;
+    this.pathId = pathId;
   }
 
   /**
@@ -46,10 +48,19 @@ public class TrackingPath {
    * @param viewClz the view class name
    * @param pathId the view's id
    */
-  public TrackingPath(String clz, String viewClz, String pathId) {
-    this.actClz = clz;
-    this.viewClz = viewClz;
-    this.pathId = pathId;
+  public TrackingPath(String clz, String viewClz, String pathId)
+      throws ClassNotFoundException, ClassCastException {
+    this(Class.<Activity>forName(clz).asSubclass(Activity.class),
+        Class.<View>forName(viewClz).asSubclass(View.class), pathId);
+  }
+
+
+  public String getPathId() {
+    return pathId;
+  }
+
+  public Class<? extends View> getViewClz() {
+    return viewClz;
   }
 
   @Override

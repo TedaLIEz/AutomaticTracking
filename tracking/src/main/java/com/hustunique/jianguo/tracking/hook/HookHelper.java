@@ -79,7 +79,6 @@ public class HookHelper {
       Class<?> iActivityManagerInterface = clzMap.get("android.app.IActivityManager");
       Object gDefault = gDefaultField.get(null);
       if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-        // 4.x以上的gDefault是一个 android.util.Singleton对象; 我们取出这个单例里面的字段
         Class<?> singleton = clzMap.get("android.util.Singleton");
         Field mInstanceField = singleton.getDeclaredField("mInstance");
         mInstanceField.setAccessible(true);
@@ -94,8 +93,6 @@ public class HookHelper {
             new Class<?>[]{iActivityManagerInterface}, new IActivityManagerHandler(gDefault));
         gDefaultField.set(gDefault, proxy);
       }
-      // ActivityManagerNative 的gDefault对象里面原始的 IActivityManager对象
-
     } catch (IllegalAccessException | NoSuchFieldException e) {
       e.printStackTrace();
     }

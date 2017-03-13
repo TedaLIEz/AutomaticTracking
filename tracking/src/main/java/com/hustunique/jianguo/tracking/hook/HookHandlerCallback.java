@@ -55,6 +55,7 @@ class HookHandlerCallback implements Handler.Callback {
     } else if (msg.what == resumeCode) {
       handleResumeActivity(msg);
     }
+    // TODO: 3/14/17 What if the click listener isn't bound in the life cycle of activity.
     mBase.handleMessage(msg);
     watchDog.watchOver();
     return true;

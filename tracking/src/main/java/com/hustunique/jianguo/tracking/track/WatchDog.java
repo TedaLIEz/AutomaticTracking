@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import com.hustunique.jianguo.tracking.Config;
+import com.hustunique.jianguo.tracking.TrackingPath;
 import com.hustunique.jianguo.tracking.hook.HookHelper;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
@@ -71,17 +72,18 @@ public class WatchDog {
 
   private void watchViewTree(Activity activity) {
     //TODO: hook window rather than activity!
-    if (isWatched(activity.getClass().getName())) {
+    if (isWatched(activity.getClass())) {
       Log.d(TAG, "Current activity is being tracked now");
       final ViewGroup rootView = (ViewGroup) activity.getWindow().getDecorView()
           .findViewById(android.R.id.content);
-      final String clzName = activity.getClass().getName();
+      final Class<? extends Activity> clzName = activity.getClass();
       rootView.getViewTreeObserver()
           .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-              // TODO: 11/28/16 Currently we have to watch view tree every time layout changes,
-              // which may not be very effective
+              // Currently we have to watch view tree every time layout changes,
+              // which may not be very effective, and this listener needs to be unregistered
+              // when app exits
               watch(rootView, clzName);
             }
           });
@@ -89,25 +91,23 @@ public class WatchDog {
     }
   }
 
-  private void watch(ViewGroup rootView, String clz) {
-    List<String> pathList = config.getPathList(clz);
-    int childCount = rootView.getChildCount();
-    for (int i = 0; i < childCount; i++) {
-      View childView = rootView.getChildAt(i);
-      for (String id : pathList) {
-        rTraverse(childView, id);
-      }
+  private void watch(ViewGroup rootView, Class<? extends Activity> clz) {
+    List<TrackingPath> pathList = config.getPathList(clz);
+    for (TrackingPath path : pathList) {
+      rTraverse(rootView, path);
     }
   }
 
-  private void rTraverse(View view, String id) {
+  private void rTraverse(View view, TrackingPath path) {
     if (view == null) {
       return;
     }
-    if (view.getId() == toId(id)) {
+    if (view.getId() == toId(path.getPathId())
+        && path.getViewClz().isAssignableFrom(view.getClass())) {
       Log.d(TAG, "find target view " + view.toString());
       try {
-        HookHelper.hookListener(view, config.findCallback(mBinders.get(currToken), id));
+        HookHelper.hookListener(view, config.findCallback(mBinders.get(currToken),
+            path.getPathId()));
       } catch (NoSuchMethodException | InvocationTargetException
           | IllegalAccessException | ClassNotFoundException | NoSuchFieldException e) {
         Log.wtf(TAG, e);
@@ -117,7 +117,7 @@ public class WatchDog {
       int childCount = viewRoot.getChildCount();
       for (int i = 0; i < childCount; i++) {
         View childView = viewRoot.getChildAt(i);
-        rTraverse(childView, id);
+        rTraverse(childView, path);
       }
     }
   }
@@ -132,14 +132,15 @@ public class WatchDog {
   }
 
 
-  private boolean isWatched(String clz) {
+  private boolean isWatched(Class<? extends Activity> clz) {
     return config.activityInTrack(clz);
   }
 
   /**
-   * add binder token to list
-   * @param compClzName the componentName
-   * @param token the Binder which used as token in system
+   * add binder token to list.
+   *
+   * @param compClzName the class name of the componentName
+   * @param token the Binder which used as window token in system
    */
   public void addToTokenList(String compClzName, IBinder token) {
     mBinders.put(token, compClzName);

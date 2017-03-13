@@ -17,6 +17,7 @@
 
 package com.hustunique.jianguo.tracking;
 
+import android.app.Activity;
 import android.support.v4.util.ArrayMap;
 import android.view.View;
 import java.util.ArrayList;
@@ -44,10 +45,10 @@ public class Config {
   /**
    * Return <tt>true</tt> activity is tracked in config
    *
-   * @param clz the activity full class name
+   * @param clz the activity class
    * @return <tt>true</tt> if tracked, <tt>false</tt> otherwise
    */
-  public boolean activityInTrack(String clz) {
+  public boolean activityInTrack(Class<? extends Activity> clz) {
     for (TrackingPath path : config.keySet()) {
       if (path.actClz.equals(clz)) {
         return true;
@@ -66,11 +67,11 @@ public class Config {
     return null;
   }
 
-  public List<String> getPathList(String clz) {
-    List<String> rst = new ArrayList<>();
+  public List<TrackingPath> getPathList(Class<? extends Activity> clz) {
+    List<TrackingPath> rst = new ArrayList<>();
     for (TrackingPath path : config.keySet()) {
       if (path.actClz.equals(clz)) {
-        rst.add(path.pathId);
+        rst.add(path);
       }
     }
     return rst;
@@ -78,7 +79,7 @@ public class Config {
 
   public Callback findCallback(String clz, String id) {
     for (TrackingPath path : config.keySet()) {
-      if (path.actClz.equals(clz) && path.pathId.equals(id)) {
+      if (path.actClz.getName().equals(clz) && path.pathId.equals(id)) {
         return config.get(path);
       }
     }
