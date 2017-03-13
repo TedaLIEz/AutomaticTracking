@@ -57,15 +57,6 @@ public class Config {
     return false;
   }
 
-  @Deprecated
-  public String getPath(String clz) {
-    for (TrackingPath path : config.keySet()) {
-      if (path.actClz.equals(clz)) {
-        return path.toString();
-      }
-    }
-    return null;
-  }
 
   public List<TrackingPath> getPathList(Class<? extends Activity> clz) {
     List<TrackingPath> rst = new ArrayList<>();

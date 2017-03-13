@@ -17,6 +17,8 @@
 
 apply plugin: 'com.android.library'
 apply plugin: 'checkstyle'
+apply plugin: 'findbugs'
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -47,6 +49,19 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
+task findbugs(type: FindBugs) {
+    excludeFilter = rootProject.file("settings/findbugs/rules-findbugs.xml")
+    classes = fileTree("$project.buildDir/intermediates/classes/release/com/hustunique/jianguo/tracking")
+    source = fileTree('src/main/java/com/hustunique/jianguo/tracking')
+    classpath = files()
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+        html.destination = "$project.buildDir/reports/findbugs/findbugs.html"
+    }
+}
+
 task checkstyle(type: Checkstyle) {
     showViolations = false
     configFile rootProject.file("settings/checkstyle/checkstyle.xml")
@@ -67,6 +82,7 @@ checkstyle {
 
 afterEvaluate {
     tasks.findByName('check').dependsOn('checkstyle')
+    tasks.findByName('build').dependsOn('findbugs')
 }
 
 
