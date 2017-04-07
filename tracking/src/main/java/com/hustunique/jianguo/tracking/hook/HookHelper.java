@@ -21,12 +21,12 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 
 import com.hustunique.jianguo.tracking.Config;
 import com.hustunique.jianguo.tracking.track.WatchDog;
 
+import com.hustunique.jianguo.tracking.util.LogUtil;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -67,7 +67,7 @@ public class HookHelper {
       methodMap
           .put("getListenerInfo", View.class.getDeclaredMethod("getListenerInfo", (Class[]) null));
     } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
-      Log.wtf(TAG, e);
+      LogUtil.wtf(TAG, e);
     }
   }
 

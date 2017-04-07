@@ -21,10 +21,10 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.util.Log;
 
 import com.hustunique.jianguo.tracking.track.WatchDog;
 
+import com.hustunique.jianguo.tracking.util.LogUtil;
 import java.lang.reflect.Field;
 
 /**
@@ -79,7 +79,7 @@ class HookHandlerCallback implements Handler.Callback {
       watchDog.addToTokenList(intent.getComponent().getClassName(), token);
       watchDog.setToken(token);
     } catch (NoSuchFieldException | IllegalAccessException e) {
-      Log.wtf(TAG, e);
+      LogUtil.wtf(TAG, e);
     }
 
   }

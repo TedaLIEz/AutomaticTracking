@@ -21,13 +21,13 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.IBinder;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import com.hustunique.jianguo.tracking.Config;
 import com.hustunique.jianguo.tracking.TrackingPath;
 import com.hustunique.jianguo.tracking.hook.HookHelper;
+import com.hustunique.jianguo.tracking.util.LogUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
@@ -61,11 +61,11 @@ public class WatchDog {
       mTokens.add(currToken);
       try {
         Activity activity = HookHelper.hookActivity(currToken);
-        Log.i(TAG, "Current watching: " + activity.getClass().getName());
+        LogUtil.i(TAG, "Current watching: " + activity.getClass().getName());
         watchViewTree(activity);
       } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException
           | IllegalAccessException | InvocationTargetException e) {
-        Log.wtf(TAG, e);
+        LogUtil.wtf(TAG, e);
       }
     }
   }
@@ -73,7 +73,7 @@ public class WatchDog {
   private void watchViewTree(Activity activity) {
     //TODO: hook window rather than activity!
     if (isWatched(activity.getClass())) {
-      Log.d(TAG, "Current activity is being tracked now");
+      LogUtil.d(TAG, "Current activity is being tracked now");
       final ViewGroup rootView = (ViewGroup) activity.getWindow().getDecorView()
           .findViewById(android.R.id.content);
       final Class<? extends Activity> clzName = activity.getClass();
@@ -104,16 +104,22 @@ public class WatchDog {
     }
     if (view.getId() == toId(path.getPathId())
         && path.getViewClz().isAssignableFrom(view.getClass())) {
-      Log.d(TAG, "find target view " + view.toString());
+      LogUtil.d(TAG, "find target view " + view.toString());
       try {
         HookHelper.hookListener(view, config.findCallback(mBinders.get(currToken),
             path.getPathId()));
       } catch (NoSuchMethodException | InvocationTargetException
           | IllegalAccessException | ClassNotFoundException | NoSuchFieldException e) {
-        Log.wtf(TAG, e);
+        LogUtil.wtf(TAG, e);
       }
-    } else if (view instanceof ViewGroup) {
+      return;
+    }
+    if (view instanceof ViewGroup) {
       final ViewGroup viewRoot = (ViewGroup) view;
+      // TODO: 4/4/17 Hook OnItemClickListener
+//      if (viewRoot instanceof AdapterView) {
+//        HookHelper.hookItemListener(viewRoot, config.findCallback(mBinders.get(currToken), path.getPathId()));
+//      }
       int childCount = viewRoot.getChildCount();
       for (int i = 0; i < childCount; i++) {
         View childView = viewRoot.getChildAt(i);
