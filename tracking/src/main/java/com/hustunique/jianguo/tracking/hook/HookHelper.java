@@ -21,20 +21,17 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
-
 import com.hustunique.jianguo.tracking.Config;
+import com.hustunique.jianguo.tracking.track.TrackInstrumentation;
 import com.hustunique.jianguo.tracking.track.WatchDog;
-
-import com.hustunique.jianguo.tracking.util.LogUtil;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by JianGuo on 11/25/16. Helper class for hook
@@ -67,8 +64,20 @@ public class HookHelper {
       methodMap
           .put("getListenerInfo", View.class.getDeclaredMethod("getListenerInfo", (Class[]) null));
     } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
-      LogUtil.wtf(TAG, e);
+      Log.wtf(TAG, e);
     }
+  }
+
+  public static void hookInstrumentation(WatchDog watchDog)
+      throws IllegalAccessException, NoSuchFieldException {
+    Class<?> activityThreadClass = clzMap.get("android.app.ActivityThread");
+    Field currentActivityThreadField = fieldMap.get("sCurrentActivityThread");
+    currentActivityThreadField.setAccessible(true);
+    Object currentActivityThread = currentActivityThreadField.get(null);
+    Field mInstrumentationField = activityThreadClass.getDeclaredField("mInstrumentation");
+    mInstrumentationField.setAccessible(true);
+    TrackInstrumentation trackInstrumentation = new TrackInstrumentation(watchDog);
+    mInstrumentationField.set(currentActivityThread, trackInstrumentation);
   }
 
   public static void hookActivityManager(Config config) {
@@ -108,24 +117,6 @@ public class HookHelper {
     return (Activity) getActivityMethod.invoke(currentActivityThread, token);
   }
 
-  public static void hookActivityThread(WatchDog watchDog)
-      throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
-
-    Class<?> activityThreadClass = clzMap.get("android.app.ActivityThread");
-    int[] code = new int[2];
-    getCode(activityThreadClass, code);
-    Field currentActivityThreadField = fieldMap.get("sCurrentActivityThread");
-    Field mHField = fieldMap.get("mH");
-    currentActivityThreadField.setAccessible(true);
-    Object currentActivityThread = currentActivityThreadField.get(null);
-    mHField.setAccessible(true);
-    Handler mH = (Handler) mHField.get(currentActivityThread);
-
-    Field mCallbackField = fieldMap.get("mCallback");
-    mCallbackField.setAccessible(true);
-    HookHandlerCallback callback = new HookHandlerCallback(mH, code[0], code[1], watchDog);
-    mCallbackField.set(mH, callback);
-  }
 
   private static boolean getCode(Class<?> activityThreadClass, int[] code)
       throws NoSuchFieldException, IllegalAccessException {
@@ -146,12 +137,11 @@ public class HookHelper {
   }
 
 
-  private static Set<View> hookViewSet = new HashSet<>();
 
   public static void hookListener(View view, Config.Callback callback)
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException,
       NoSuchFieldException, ClassNotFoundException {
-    if (view.hasOnClickListeners() && !hookViewSet.contains(view)) {
+    if (view.hasOnClickListeners()) {
       Method method = methodMap.get("getListenerInfo");
       if (null != method) {
         method.setAccessible(true);
@@ -165,7 +155,6 @@ public class HookHelper {
           Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
               new Class[]{onClickListenerClz}, new IClickHandler(listener, callback));
           listenerField.set(listenerInfo, proxy);
-          hookViewSet.add(view);
         }
       }
     }

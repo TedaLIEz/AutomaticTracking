@@ -68,9 +68,9 @@ public class Config {
     return rst;
   }
 
-  public Callback findCallback(String clz, String id) {
+  public Callback findCallback(String id) {
     for (TrackingPath path : config.keySet()) {
-      if (path.actClz.getName().equals(clz) && path.pathId.equals(id)) {
+      if (path.pathId.equals(id)) {
         return config.get(path);
       }
     }
